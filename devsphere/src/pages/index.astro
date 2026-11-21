@@ -1,0 +1,278 @@
+
+
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import DestinationCard from "../components/DestinationCard.astro";
+
+import { sanityClient } from "../lib/sanity";
+import { urlFor } from "../lib/image";
+
+interface Destination {
+  _id: string;
+  name: string;
+  country: string;
+  description: string;
+  slug: string;
+  mainImage: {
+    _type: "image";
+    asset: {
+      _ref: string;
+      _type: "reference";
+    };
+  };
+}
+
+interface Category {
+  _id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  image?: any;
+}
+
+const categoryQuery = `*[_type == "category" && defined(slug.current)] | order(title asc) {
+  _id,
+  title,
+  "slug": slug.current,
+  description,
+  image
+}`;
+
+const categories: Category[] = await sanityClient.fetch(categoryQuery);
+
+interface Country {
+  _id: string;
+  name: string;
+  slug: string;
+  description: string;
+  flag?: any;
+  coverImage?: any;
+}
+
+const countryQuery = `*[_type == "country" && defined(slug.current)] | order(name asc) {
+  _id,
+  name,
+  "slug": slug.current,
+  description,
+  flag,
+  coverImage
+}`;
+
+const countries: Country[] = await sanityClient.fetch(countryQuery);
+
+const query = `*[_type == "destination" && featured == true] {
+  _id,
+  name,
+  "country": country->name,
+  description,
+  mainImage,
+  "slug": slug.current
+}`; 
+
+const destinations = await sanityClient.fetch(query);
+---
+
+
+<MainLayout title="TravelSphere | Explore the World">
+
+  <Navbar />
+
+  <main>
+
+    <!-- Hero Section -->
+    <section class="min-h-[600px] flex items-center px-[8%] bg-emerald-50">
+      <div class="max-w-2xl">
+
+        <p class="text-emerald-600 font-bold tracking-[3px] mb-5">
+          DISCOVER THE WORLD
+        </p>
+
+        <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-6">
+          Explore Beautiful Places Around The World
+        </h1>
+
+        <p class="text-gray-600 text-lg leading-relaxed mb-8">
+          Discover amazing destinations, explore new cultures
+          and create unforgettable travel experiences.
+        </p>
+
+        <a
+          href="/destinations"
+          class="inline-block bg-emerald-600 text-white px-7 py-4 rounded-lg hover:bg-emerald-700 transition"
+        >
+          Explore Destinations →
+        </a>
+
+      </div>
+    </section>
+
+    <!-- Featured Destinations Section -->
+    <section class="py-20 px-6 bg-gray-50">
+
+      <div class="max-w-7xl mx-auto">
+
+        <div class="text-center mb-12">
+
+          <p class="text-emerald-600 font-bold tracking-widest uppercase text-sm mb-3">
+            Explore The World
+          </p>
+
+          <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
+            Featured Destinations
+          </h2>
+
+          <p class="text-gray-500 max-w-xl mx-auto">
+            Discover amazing places around the world and plan your next adventure.
+          </p>
+
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
+
+          {destinations.map((destination) => (
+  <DestinationCard
+    name={destination.name}
+    country={destination.country}
+    description={destination.description}
+    image={urlFor(destination.mainImage).width(800).url()}
+    slug={destination.slug}
+  />
+))}
+
+        </div>
+
+        <div class="text-center mt-12">
+
+          <a
+            href="/destinations"
+            class="inline-block border border-emerald-600 text-emerald-600 px-7 py-3 rounded-lg font-semibold hover:bg-emerald-600 hover:text-white transition"
+          >
+            View All Destinations →
+          </a>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+<!-- Categories Section -->
+
+<section class="py-16 px-6 bg-white">
+  <div class="max-w-7xl mx-auto">
+
+    <div class="text-center mb-12">
+      <p class="text-emerald-600 font-bold uppercase tracking-widest mb-3">
+        Explore By Category
+      </p>
+
+      <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900">
+        Find Your Travel Style
+      </h2>
+
+      <p class="text-gray-600 mt-4">
+        Choose your favorite travel category and explore amazing places.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
+      {categories.map((category) => (
+        <a
+          href={`/destinations?category=${category.slug}`}
+          class="group rounded-2xl overflow-hidden bg-gray-50 shadow-sm hover:shadow-xl transition duration-300"
+        >
+          {category.image && (
+            <img
+              src={urlFor(category.image).width(600).url()}
+              alt={category.title}
+              class="w-full h-52 object-cover group-hover:scale-105 transition duration-300"
+            />
+          )}
+
+          <div class="p-5">
+            <h3 class="text-xl font-bold text-gray-900 mb-2">
+              {category.title}
+            </h3>
+
+            <p class="text-gray-600 text-sm leading-6">
+              {category.description}
+            </p>
+
+            <span class="inline-block mt-4 text-emerald-600 font-semibold">
+              Explore Category →
+            </span>
+          </div>
+        </a>
+      ))}
+    </div>
+
+  </div>
+</section>
+   
+<!-- Countries Section -->
+
+<section class="py-16 px-6 bg-gray-50">
+  <div class="max-w-7xl mx-auto">
+
+    <div class="text-center mb-12">
+      <p class="text-emerald-600 font-bold uppercase tracking-widest mb-3">
+        Explore By Country
+      </p>
+
+      <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900">
+        Discover Countries
+      </h2>
+
+      <p class="text-gray-600 mt-4">
+        Explore beautiful destinations from different countries.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
+
+      {countries.map((country) => (
+        <a
+          href={`/countries/${country.slug}`}
+          class="group overflow-hidden rounded-2xl bg-white shadow-sm hover:shadow-xl transition duration-300"
+        >
+
+          {country.coverImage && (
+            <img
+              src={urlFor(country.coverImage).width(800).url()}
+              alt={country.name}
+              class="w-full h-56 object-cover group-hover:scale-105 transition duration-300"
+            />
+          )}
+
+          <div class="p-6">
+
+            <h3 class="text-xl font-bold text-gray-900 mb-2">
+              {country.name}
+            </h3>
+
+            <p class="text-gray-600 text-sm leading-6">
+              {country.description}
+            </p>
+
+            <span class="inline-block mt-4 text-emerald-600 font-semibold">
+              Explore Country →
+            </span>
+
+          </div>
+        </a>
+      ))}
+
+    </div>
+
+  </div>
+</section>
+
+
+  </main>
+
+  <Footer />
+
+</MainLayout>

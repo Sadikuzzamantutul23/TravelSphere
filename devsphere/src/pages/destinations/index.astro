@@ -1,0 +1,190 @@
+
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+import DestinationCard from "../../components/DestinationCard.astro";
+
+import { sanityClient } from "../../lib/sanity";
+import { urlFor } from "../../lib/image";
+
+interface Destination {
+  _id: string;
+  name: string;
+  country: string;
+  description: string;
+  slug: string;
+  mainImage?: any;
+}
+
+const query = `*[_type == "destination" && defined(slug.current)] | order(name asc) {
+  _id,
+  name,
+  country,
+  description,
+  mainImage,
+  "slug": slug.current
+}`;
+
+const destinations: Destination[] = await sanityClient.fetch(query);
+
+const countries = [
+  ...new Set(destinations.map((destination) => destination.country))
+].sort();
+---
+
+<MainLayout title="All Destinations | TravelSphere">
+  <Navbar />
+
+  <main>
+    <!-- Page Hero -->
+    <section class="bg-emerald-50 py-20 px-6">
+      <div class="max-w-7xl mx-auto text-center">
+        <p class="text-emerald-600 font-bold tracking-widest uppercase mb-4">
+          Explore The World
+        </p>
+
+        <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-5">
+          Discover Amazing Destinations
+        </h1>
+
+        <p class="text-gray-600 max-w-2xl mx-auto">
+          Explore beautiful places, discover new cultures and
+          find your next travel destination.
+        </p>
+      </div>
+    </section>
+
+    <!-- All Destinations -->
+    <section class="py-16 px-6 bg-gray-50">
+      <div class="max-w-7xl mx-auto">
+
+        <!-- Search and Filter -->
+        <div class="mb-10">
+          <h2 class="text-2xl font-bold text-gray-900 mb-6">
+            All Destinations
+          </h2>
+
+          <div class="flex flex-col md:flex-row gap-4 mb-6">
+            <input
+              type="search"
+              id="destination-search"
+              placeholder="Search destination or country..."
+              class="w-full md:flex-1 px-5 py-4 rounded-xl border border-gray-200 outline-none focus:border-emerald-500"
+            />
+
+            <select
+              id="country-filter"
+              class="w-full md:w-64 px-5 py-4 rounded-xl border border-gray-200 outline-none focus:border-emerald-500 bg-white"
+            >
+              <option value="">All Countries</option>
+
+              {countries.map((country) => (
+                <option value={country.toLowerCase()}>
+                  {country}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <p class="text-gray-500">
+            <span id="destination-count">{destinations.length}</span>
+            Places Found
+          </p>
+        </div>
+
+        <!-- Destination Cards -->
+        {destinations.length > 0 ? (
+          <div
+            id="destination-grid"
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7"
+          >
+            {destinations.map((destination) => (
+              <DestinationCard
+                name={destination.name}
+                country={destination.country}
+                description={destination.description}
+                image={
+                  destination.mainImage
+                    ? urlFor(destination.mainImage).width(800).url()
+                    : "/placeholder.jpg"
+                }
+                slug={destination.slug}
+              />
+            ))}
+          </div>
+        ) : (
+          <p class="text-center text-gray-500 py-16">
+            No destinations found.
+          </p>
+        )}
+
+        <!-- No Search Results -->
+        <p
+          id="no-results"
+          class="hidden text-center text-gray-500 py-16"
+        >
+          No destinations found. Try another search.
+        </p>
+
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</MainLayout>
+
+<script>
+  const searchInput =
+    document.querySelector<HTMLInputElement>("#destination-search");
+
+  const countryFilter =
+    document.querySelector<HTMLSelectElement>("#country-filter");
+
+  const destinationCards =
+    document.querySelectorAll<HTMLElement>("[data-destination-card]");
+
+  const destinationCount =
+    document.querySelector<HTMLElement>("#destination-count");
+
+  const noResults =
+    document.querySelector<HTMLElement>("#no-results");
+
+  function filterDestinations() {
+    if (!searchInput || !countryFilter || !destinationCount || !noResults) {
+      return;
+    }
+
+    const searchValue = searchInput.value.toLowerCase().trim();
+    const selectedCountry = countryFilter.value;
+
+    let visibleCount = 0;
+
+    destinationCards.forEach((card) => {
+      const name = card.dataset.name || "";
+      const country = card.dataset.country || "";
+
+      const matchesSearch =
+        name.includes(searchValue) ||
+        country.includes(searchValue);
+
+      const matchesCountry =
+        !selectedCountry || country === selectedCountry;
+
+      const isVisible = matchesSearch && matchesCountry;
+
+      card.classList.toggle("hidden", !isVisible);
+
+      if (isVisible) {
+        visibleCount++;
+      }
+    });
+
+    destinationCount.textContent = String(visibleCount);
+
+    noResults.classList.toggle("hidden", visibleCount !== 0);
+  }
+
+  searchInput?.addEventListener("input", filterDestinations);
+  countryFilter?.addEventListener("change", filterDestinations);
+</script>
