@@ -3,11 +3,24 @@
 import MainLayout from "../../layouts/MainLayout.astro";
 import Navbar from "../../components/Navbar.astro";
 import Footer from "../../components/Footer.astro";
+import DestinationCard from "../../components/DestinationCard.astro";
 
 import { sanityClient } from "../../lib/sanity";
 import { urlFor } from "../../lib/image";
 
 interface Destination {
+  _id: string;
+  name: string;
+  country: string;
+  category: string;
+  description: string;
+  slug: string;
+  mainImage?: any;
+  countryId: string;
+  categoryId: string;
+}
+
+interface RelatedDestination {
   _id: string;
   name: string;
   country: string;
@@ -20,10 +33,13 @@ export async function getStaticPaths() {
   const query = `*[_type == "destination" && defined(slug.current)] {
     _id,
     name,
-    country,
+    "country": country->name,
+    "category": category->title,
     description,
     mainImage,
-    "slug": slug.current
+    "slug": slug.current,
+    "countryId": country._ref,
+    "categoryId": category._ref
   }`;
 
   const destinations: Destination[] = await sanityClient.fetch(query);
@@ -37,48 +53,125 @@ export async function getStaticPaths() {
 const { destination } = Astro.props;
 
 const imageUrl = destination.mainImage
-  ? urlFor(destination.mainImage).width(1200).url()
+  ? urlFor(destination.mainImage).width(1600).url()
   : null;
+
+// Fetch related destinations
+const relatedQuery = `*[
+  _type == "destination" &&
+  _id != $currentId &&
+  defined(slug.current) &&
+  (
+    country._ref == $countryId ||
+    category._ref == $categoryId
+  )
+] | order(name asc)[0...4] {
+  _id,
+  name,
+  "country": country->name,
+  description,
+  mainImage,
+  "slug": slug.current
+}`;
+
+const relatedDestinations: RelatedDestination[] =
+  await sanityClient.fetch(relatedQuery, {
+    currentId: destination._id,
+    countryId: destination.countryId,
+    categoryId: destination.categoryId,
+  });
 ---
 
 <MainLayout title={`${destination.name} | TravelSphere`}>
   <Navbar />
 
-  <main class="max-w-7xl mx-auto px-6 py-12">
-    <a
-      href="/"
-      class="text-emerald-600 font-semibold hover:underline"
-    >
-      ← Back to Home
-    </a>
+  <main>
+    <!-- Destination Hero Section -->
+    <section class="relative bg-gray-900">
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt={destination.name}
+          class="w-full h-[450px] md:h-[550px] object-cover opacity-60"
+        />
+      )}
 
-    <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+      <div class="absolute inset-0 flex items-center justify-center">
+        <div class="text-center text-white px-6 max-w-4xl">
+          <div class="flex justify-center gap-3 mb-5 flex-wrap">
+            <span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm">
+              {destination.country}
+            </span>
 
-      <div>
-        <p class="text-emerald-600 font-bold uppercase tracking-widest mb-3">
-          {destination.country}
+            <span class="bg-rose-500 px-4 py-2 rounded-full text-sm">
+              {destination.category}
+            </span>
+          </div>
+
+          <h1 class="text-4xl md:text-6xl font-bold mb-6">
+            {destination.name}
+          </h1>
+
+          <p class="text-lg md:text-xl text-gray-100 leading-relaxed">
+            {destination.description}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- About Destination Section -->
+    <section class="max-w-7xl mx-auto px-6 py-16">
+      <div class="max-w-3xl mx-auto text-center">
+        <p class="text-rose-600 font-semibold uppercase tracking-widest text-sm mb-3">
+          Explore the Destination
         </p>
 
-        <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">
-          {destination.name}
-        </h1>
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+          About {destination.name}
+        </h2>
 
-        <p class="text-gray-600 text-lg leading-8">
+        <p class="text-gray-600 leading-8 text-lg">
           {destination.description}
         </p>
       </div>
+    </section>
 
-      {imageUrl && (
-        <div class="overflow-hidden rounded-2xl">
-          <img
-            src={imageUrl}
-            alt={destination.name}
-            class="w-full h-[400px] object-cover"
-          />
+    <!-- Related Destinations Section -->
+    {relatedDestinations.length > 0 && (
+      <section class="bg-gray-50 px-6 py-16">
+        <div class="max-w-7xl mx-auto">
+          <div class="text-center mb-10">
+            <p class="text-rose-600 font-semibold uppercase tracking-widest text-sm mb-3">
+              Discover More
+            </p>
+
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900">
+              Related Destinations
+            </h2>
+
+            <p class="text-gray-500 mt-3">
+              Explore more places with similar countries or categories.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
+            {relatedDestinations.map((related) => (
+              <DestinationCard
+                name={related.name}
+                country={related.country ?? "Unknown Country"}
+                description={related.description}
+                image={
+                  related.mainImage
+                    ? urlFor(related.mainImage).width(800).url()
+                    : "/placeholder.jpg"
+                }
+                slug={related.slug}
+              />
+            ))}
+          </div>
         </div>
-      )}
-
-    </div>
+      </section>
+    )}
   </main>
 
   <Footer />

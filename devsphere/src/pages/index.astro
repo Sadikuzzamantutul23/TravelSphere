@@ -82,31 +82,101 @@ const destinations = await sanityClient.fetch(query);
   <main>
 
     <!-- Hero Section -->
-    <section class="min-h-[600px] flex items-center px-[8%] bg-emerald-50">
-      <div class="max-w-2xl">
 
-        <p class="text-emerald-600 font-bold tracking-[3px] mb-5">
-          DISCOVER THE WORLD
-        </p>
+<section class="hero-section min-h-[650px] flex items-center px-[8%] bg-emerald-50 overflow-hidden">
 
-        <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-6">
-          Explore Beautiful Places Around The World
-        </h1>
+  <!-- Left Content -->
+  <div class="hero-content w-full lg:w-1/2 max-w-2xl relative z-10">
 
-        <p class="text-gray-600 text-lg leading-relaxed mb-8">
-          Discover amazing destinations, explore new cultures
-          and create unforgettable travel experiences.
-        </p>
+    <p class="text-emerald-600 font-bold tracking-[3px] mb-5">
+      DISCOVER THE WORLD
+    </p>
 
-        <a
-          href="/destinations"
-          class="inline-block bg-emerald-600 text-white px-7 py-4 rounded-lg hover:bg-emerald-700 transition"
-        >
-          Explore Destinations →
-        </a>
+    <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-6">
+      Explore Beautiful Places Around The World
+    </h1>
+
+    <p class="text-gray-600 text-lg leading-relaxed mb-8">
+      Discover amazing destinations, explore new cultures
+      and create unforgettable travel experiences.
+    </p>
+
+    <a
+      href="/destinations"
+      class="inline-block bg-emerald-600 text-white px-7 py-4 rounded-lg hover:bg-emerald-700 transition"
+    >
+      Explore Destinations →
+    </a>
+
+  </div>
+
+  <!-- Right Rotating Gallery -->
+  <div class="hero-gallery hidden lg:flex w-1/2 items-center justify-center">
+
+    <div class="orbit-container">
+
+      <div class="orbit-center">
+        <span>✈</span>
+        <p>Explore</p>
+      </div>
+
+      <div class="orbit-track">
+
+        <div class="orbit-card">
+          <div class="orbit-card-inner">
+            <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400" alt="Mountain travel destination" />
+          </div>
+        </div>
+
+        <div class="orbit-card">
+          <div class="orbit-card-inner">
+            <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400" alt="Beautiful landscape" />
+          </div>
+        </div>
+
+        <div class="orbit-card">
+          <div class="orbit-card-inner">
+            <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=400" alt="Lake and mountain destination" />
+          </div>
+        </div>
+
+        <div class="orbit-card">
+          <div class="orbit-card-inner">
+            <img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400" alt="Ocean travel destination" />
+          </div>
+        </div>
+
+        <div class="orbit-card">
+          <div class="orbit-card-inner">
+            <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400" alt="Snowy mountain destination" />
+          </div>
+        </div>
+
+        <div class="orbit-card">
+          <div class="orbit-card-inner">
+            <img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=400" alt="Beautiful lake destination" />
+          </div>
+        </div>
+
+        <div class="orbit-card">
+          <div class="orbit-card-inner">
+            <img src="https://images.unsplash.com/photo-1500534623283-312aade485b7?w=400" alt="Nature travel destination" />
+          </div>
+        </div>
+
+        <div class="orbit-card">
+          <div class="orbit-card-inner">
+            <img src="https://images.unsplash.com/photo-1494783367193-149034c05e8f?w=400" alt="Scenic travel destination" />
+          </div>
+        </div>
 
       </div>
-    </section>
+    </div>
+
+  </div>
+
+</section>
+
 
     <!-- Featured Destinations Section -->
     <section class="py-20 px-6 bg-gray-50">
@@ -276,3 +346,184 @@ const destinations = await sanityClient.fetch(query);
   <Footer />
 
 </MainLayout>
+
+
+<style>
+
+.hero-gallery {
+  min-height: 550px;
+}
+
+.orbit-container {
+  width: 380px;
+  height: 380px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Circular background */
+.orbit-container::before {
+  content: "";
+  position: absolute;
+  width: 330px;
+  height: 330px;
+  border: 1px dashed rgba(22, 160, 133, 0.35);
+  border-radius: 50%;
+}
+
+.orbit-center {
+  position: absolute;
+  width: 135px;
+  height: 135px;
+  background: #16a085;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 15px 40px rgba(22, 160, 133, 0.25);
+  z-index: 2;
+}
+
+.orbit-center span {
+  font-size: 42px;
+}
+
+.orbit-center p {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+/* Rotating orbit */
+.orbit-track {
+  position: absolute;
+  inset: 0;
+  animation: orbit-rotate 40s linear infinite;
+}
+
+.orbit-card {
+  position: absolute;
+  width: 112px;
+  height: 142px;
+  transform: translate(-50%, -50%);
+}
+
+.orbit-card-inner {
+  width: 100%;
+  height: 100%;
+  border: 5px solid white;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+
+  animation:
+    orbit-counter-rotate 40s linear infinite,
+    orbit-pulse 5s ease-in-out infinite;
+}
+
+.orbit-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Eight image positions */
+.orbit-card:nth-child(1) {
+  top: 0;
+  left: 50%;
+}
+
+.orbit-card:nth-child(2) {
+  top: 15%;
+  left: 85%;
+}
+
+.orbit-card:nth-child(3) {
+  top: 50%;
+  left: 100%;
+}
+
+.orbit-card:nth-child(4) {
+  top: 85%;
+  left: 85%;
+}
+
+.orbit-card:nth-child(5) {
+  top: 100%;
+  left: 50%;
+}
+
+.orbit-card:nth-child(6) {
+  top: 85%;
+  left: 15%;
+}
+
+.orbit-card:nth-child(7) {
+  top: 50%;
+  left: 0;
+}
+
+.orbit-card:nth-child(8) {
+  top: 15%;
+  left: 15%;
+}
+
+/* 360 degree rotation */
+@keyframes orbit-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Keep images straight */
+@keyframes orbit-counter-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+/* Center zoom animation */
+@keyframes orbit-pulse {
+  0%, 100% {
+    scale: 1;
+    opacity: 1;
+  }
+
+  35% {
+    scale: 0.55;
+    opacity: 0.65;
+  }
+
+  50% {
+    scale: 0.45;
+    opacity: 0.45;
+  }
+
+  70% {
+    scale: 0.8;
+    opacity: 0.85;
+  }
+}
+
+/* Responsive */
+@media (prefers-reduced-motion: reduce) {
+  .orbit-track,
+  .orbit-card-inner {
+    animation: none;
+  }
+}
+
+</style>
+

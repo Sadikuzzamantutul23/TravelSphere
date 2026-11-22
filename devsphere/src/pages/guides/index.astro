@@ -1,0 +1,283 @@
+
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+
+import { sanityClient } from "../../lib/sanity";
+import { urlFor } from "../../lib/image";
+
+interface Guide {
+  _id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  category: string;
+  author: string;
+  readingTime: number;
+  publishedAt?: string;
+  coverImage?: any;
+}
+
+const query = `*[_type == "guide" && defined(slug.current)]
+  | order(publishedAt desc) {
+    _id,
+    title,
+    "slug": slug.current,
+    excerpt,
+    category,
+    author,
+    readingTime,
+    publishedAt,
+    coverImage
+  }`;
+
+const guides: Guide[] = await sanityClient.fetch(query);
+
+const featuredGuide = guides[0];
+const otherGuides = guides.slice(1);
+
+function formatCategory(category?: string) {
+  if (!category) return "Travel Guide";
+
+  return category
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+---
+
+<MainLayout title="Travel Guides | TravelSphere">
+  <Navbar />
+
+  <main class="bg-white">
+
+    <!-- Hero Section -->
+    <section class="bg-[#eaf7f3] overflow-hidden">
+      <div class="max-w-7xl mx-auto px-6 py-14 md:py-20">
+        <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-12">
+
+          <div class="max-w-xl">
+            <span class="inline-flex items-center gap-2 bg-white text-[#16a085] px-4 py-2 rounded-full text-sm font-semibold mb-6 shadow-sm">
+              <span class="w-2 h-2 rounded-full bg-[#16a085]"></span>
+              TRAVEL KNOWLEDGE & INSPIRATION
+            </span>
+
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+              Travel Better.
+              <span class="text-[#16a085]">Discover More.</span>
+            </h1>
+
+            <p class="text-gray-600 text-base md:text-lg leading-8 mt-6 max-w-lg">
+              Explore helpful travel guides, discover new experiences
+              and get practical advice to plan your next unforgettable journey.
+            </p>
+
+            <div class="flex flex-wrap items-center gap-4 mt-8">
+              <a
+                href="#travel-guides"
+                class="inline-flex items-center gap-2 bg-[#16a085] hover:bg-[#12876f] text-white px-7 py-3.5 rounded-xl font-semibold transition duration-300 shadow-sm"
+              >
+                Explore Guides
+                <span aria-hidden="true">→</span>
+              </a>
+
+              <span class="text-gray-500 text-sm">
+                {guides.length} Travel Guides
+              </span>
+            </div>
+          </div>
+
+          <div class="relative">
+            <div class="absolute -top-5 -right-5 w-32 h-32 bg-[#16a085]/10 rounded-full blur-2xl"></div>
+
+            <div class="relative rounded-3xl overflow-hidden shadow-xl bg-white p-2">
+              {featuredGuide?.coverImage ? (
+                <img
+                  src={urlFor(featuredGuide.coverImage).width(1100).height(850).fit("crop").url()}
+                  alt={featuredGuide.title}
+                  class="w-full h-[300px] md:h-[420px] object-cover rounded-2xl"
+                />
+              ) : (
+                <div class="w-full h-[300px] md:h-[420px] rounded-2xl bg-[#d9eee7] flex items-center justify-center">
+                  <span class="text-[#16a085] font-semibold">
+                    Discover the World
+                  </span>
+                </div>
+              )}
+
+              <div class="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-lg">
+                <p class="text-[#16a085] text-xs font-bold uppercase tracking-wider">
+                  Travel Inspiration
+                </p>
+
+                <h2 class="text-lg md:text-xl font-bold text-gray-900 mt-2">
+                  Discover places. Create memories.
+                </h2>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Guide -->
+    {featuredGuide && (
+      <section class="max-w-7xl mx-auto px-6 pt-16 md:pt-20">
+        <div class="flex items-end justify-between gap-4 mb-8">
+          <div>
+            <p class="text-[#16a085] text-sm font-bold uppercase tracking-widest mb-2">
+              Handpicked For You
+            </p>
+
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900">
+              Featured Guide
+            </h2>
+          </div>
+
+          <span class="hidden sm:inline-block text-sm text-gray-500">
+            Our latest travel inspiration
+          </span>
+        </div>
+
+        <a
+          href={`/guides/${featuredGuide.slug}`}
+          class="group grid grid-cols-1 lg:grid-cols-2 overflow-hidden rounded-3xl bg-[#eaf7f3] border border-[#dcefe8] hover:shadow-xl transition duration-300"
+        >
+          <div class="h-72 md:h-96 lg:h-[430px] overflow-hidden bg-gray-100">
+            {featuredGuide.coverImage && (
+              <img
+                src={urlFor(featuredGuide.coverImage).width(1200).height(900).fit("crop").url()}
+                alt={featuredGuide.title}
+                class="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+              />
+            )}
+          </div>
+
+          <div class="flex flex-col justify-center p-7 md:p-12">
+            <span class="inline-block w-fit bg-white text-[#16a085] px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
+              {formatCategory(featuredGuide.category)}
+            </span>
+
+            <h3 class="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mt-6 group-hover:text-[#16a085] transition">
+              {featuredGuide.title}
+            </h3>
+
+            <p class="text-gray-600 leading-8 mt-5">
+              {featuredGuide.excerpt}
+            </p>
+
+            <div class="flex flex-wrap items-center gap-5 text-sm text-gray-500 mt-7">
+              <span>By {featuredGuide.author}</span>
+              <span>{featuredGuide.readingTime} min read</span>
+            </div>
+
+            <span class="inline-flex items-center gap-2 text-[#16a085] font-bold mt-8">
+              Read Full Guide
+              <span class="group-hover:translate-x-2 transition-transform duration-300" aria-hidden="true">→</span>
+            </span>
+          </div>
+        </a>
+      </section>
+    )}
+
+    <!-- All Travel Guides -->
+    <section id="travel-guides" class="max-w-7xl mx-auto px-6 py-20">
+
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+        <div>
+          <p class="text-[#16a085] text-sm font-bold uppercase tracking-widest mb-2">
+            Explore & Learn
+          </p>
+
+          <h2 class="text-3xl md:text-4xl font-bold text-gray-900">
+            Explore Our Travel Guides
+          </h2>
+
+          <p class="text-gray-500 mt-3 leading-7">
+            Everything you need to know before your next adventure.
+          </p>
+        </div>
+
+        <div class="bg-[#eaf7f3] text-[#12876f] px-5 py-3 rounded-xl text-sm font-semibold">
+          {guides.length} Guides Available
+        </div>
+      </div>
+
+      {otherGuides.length > 0 ? (
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
+
+          {otherGuides.map((guide) => (
+            <article class="group overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-xl transition duration-300">
+
+              <a
+                href={`/guides/${guide.slug}`}
+                class="block overflow-hidden bg-[#eaf7f3]"
+              >
+                {guide.coverImage ? (
+                  <img
+                    src={urlFor(guide.coverImage).width(900).height(650).fit("crop").url()}
+                    alt={guide.title}
+                    loading="lazy"
+                    class="w-full h-60 object-cover group-hover:scale-105 transition duration-500"
+                  />
+                ) : (
+                  <div class="w-full h-60 flex items-center justify-center text-[#16a085] font-semibold">
+                    TravelSphere Guide
+                  </div>
+                )}
+              </a>
+
+              <div class="p-6">
+
+                <span class="inline-block bg-[#eaf7f3] text-[#12876f] px-3 py-1.5 rounded-full text-xs font-semibold">
+                  {formatCategory(guide.category)}
+                </span>
+
+                <a href={`/guides/${guide.slug}`}>
+                  <h3 class="text-xl font-bold text-gray-900 mt-4 leading-snug group-hover:text-[#16a085] transition">
+                    {guide.title}
+                  </h3>
+                </a>
+
+                <p class="text-gray-600 text-sm leading-7 mt-3 line-clamp-3">
+                  {guide.excerpt}
+                </p>
+
+                <div class="flex items-center justify-between gap-3 mt-6 pt-5 border-t border-gray-100 text-xs text-gray-500">
+                  <span class="truncate">{guide.author}</span>
+                  <span class="shrink-0">{guide.readingTime} min read</span>
+                </div>
+
+                <a
+                  href={`/guides/${guide.slug}`}
+                  class="inline-flex items-center gap-2 text-[#16a085] font-semibold text-sm mt-5 hover:text-[#12876f] transition"
+                >
+                  Read More
+                  <span aria-hidden="true">→</span>
+                </a>
+
+              </div>
+            </article>
+          ))}
+
+        </div>
+      ) : guides.length === 0 ? (
+        <div class="text-center py-20 px-6 bg-[#eaf7f3] rounded-2xl">
+          <h3 class="text-2xl font-bold text-gray-900">
+            No Travel Guides Yet
+          </h3>
+
+          <p class="text-gray-600 mt-3">
+            New travel guides will be published here soon.
+          </p>
+        </div>
+      ) : null}
+
+    </section>
+
+  </main>
+
+  <Footer />
+</MainLayout>

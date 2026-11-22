@@ -1,0 +1,165 @@
+
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+import DestinationCard from "../../components/DestinationCard.astro";
+
+import { sanityClient } from "../../lib/sanity";
+import { urlFor } from "../../lib/image";
+
+interface Destination {
+  _id: string;
+  name: string;
+  country: string;
+  description: string;
+  slug: string;
+  mainImage?: any;
+}
+
+interface Country {
+  _id: string;
+  name: string;
+  slug: string;
+  description: string;
+  coverImage?: any;
+  flag?: any;
+}
+
+export async function getStaticPaths() {
+  const countryQuery = `*[_type == "country" && defined(slug.current)] {
+    _id,
+    name,
+    "slug": slug.current,
+    description,
+    coverImage,
+    flag
+  }`;
+
+  const countries: Country[] = await sanityClient.fetch(countryQuery);
+
+  const paths = await Promise.all(
+    countries.map(async (country) => {
+      const destinationQuery = `*[
+        _type == "destination" &&
+        country._ref == $countryId &&
+        defined(slug.current)
+      ] | order(name asc) {
+        _id,
+        name,
+        "country": country->name,
+        description,
+        mainImage,
+        "slug": slug.current
+      }`;
+
+      const destinations: Destination[] = await sanityClient.fetch(
+        destinationQuery,
+        { countryId: country._id }
+      );
+
+      return {
+        params: { slug: country.slug },
+        props: { country, destinations },
+      };
+    })
+  );
+
+  return paths;
+}
+
+const { country, destinations } = Astro.props;
+
+const coverImage = country.coverImage
+  ? urlFor(country.coverImage).width(1600).url()
+  : null;
+---
+
+<MainLayout title={`${country.name} | TravelSphere`}>
+  <Navbar />
+
+  <main>
+    <!-- Country Hero Section -->
+
+    <section class="relative min-h-[400px] flex items-center justify-center bg-emerald-50 px-6 py-20">
+
+      {coverImage && (
+        <img
+          src={coverImage}
+          alt={country.name}
+          class="absolute inset-0 w-full h-full object-cover"
+        />
+      )}
+
+      <div class="absolute inset-0 bg-black/50"></div>
+
+      <div class="relative z-10 text-center max-w-3xl">
+
+        <p class="text-emerald-300 font-bold tracking-widest uppercase mb-4">
+          Explore Country
+        </p>
+
+        <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-6">
+          {country.name}
+        </h1>
+
+        <p class="text-white/90 text-lg leading-8">
+          {country.description}
+        </p>
+
+      </div>
+    </section>
+
+    <!-- Country Destinations -->
+
+    <section class="py-20 px-6 bg-gray-50">
+
+      <div class="max-w-7xl mx-auto">
+
+        <div class="text-center mb-12">
+
+          <p class="text-emerald-600 font-bold tracking-widest uppercase mb-3">
+            Explore Places
+          </p>
+
+          <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900">
+            Destinations in {country.name}
+          </h2>
+
+          <p class="text-gray-500 mt-4">
+            Discover amazing places and experiences in {country.name}.
+          </p>
+
+        </div>
+
+        {destinations.length > 0 ? (
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
+
+            {destinations.map((destination) => (
+              <DestinationCard
+                name={destination.name}
+                country={destination.country ?? country.name}
+                description={destination.description}
+                image={
+                  destination.mainImage
+                    ? urlFor(destination.mainImage).width(800).url()
+                    : ""
+                }
+                slug={destination.slug}
+              />
+            ))}
+
+          </div>
+        ) : (
+          <p class="text-center text-gray-500 py-12">
+            No destinations have been added to this country yet.
+          </p>
+        )}
+
+      </div>
+    </section>
+
+  </main>
+
+  <Footer />
+</MainLayout>
